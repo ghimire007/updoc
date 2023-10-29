@@ -1,7 +1,14 @@
-use crate::config::config::get_env;
+use crate::{config::config::get_env, managers::websocketmanager::GlobalWebSocketManager};
 use lazy_static::lazy_static;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::time::Duration;
+use crate::config::redis_handler::{RedisHandler,connect};
+use std::sync ::{Arc,
+    Mutex
+     //as MU
+    };
+//use tokio::sync::Mutex;
+
 
 // #[tokio::main]
 // pub async fn get_db()->DatabaseConnection{
@@ -25,6 +32,7 @@ use std::time::Duration;
 // }
 
 lazy_static! {
+
     #[derive(Debug)]
     pub static ref DB: DatabaseConnection = {
         //get_db();
@@ -49,10 +57,40 @@ lazy_static! {
             })
         });
 
+        // let mut redis=connect();
+        // let mut pub_sub=redis.as_pubsub();
+        // pub_sub.subscribe("channel1");
+        
+
         println!("db connected");
 
 
 
         db
     };
+
 }
+
+lazy_static! {
+    pub static ref WSH: Arc<Mutex<GlobalWebSocketManager>> = {
+
+        Arc::new(Mutex::new(GlobalWebSocketManager::new()))
+    };
+}
+
+
+   lazy_static!{
+    pub static ref PUBLISHER : Arc<Mutex<redis::Connection>> ={
+        Arc::new(Mutex::new(connect()))
+    };
+  
+  
+  
+  
+   }
+   
+    
+
+
+
+
