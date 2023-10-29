@@ -1,46 +1,39 @@
 #![allow(warnings)]
-use axum::{routing::get, Router};
-use std::net::SocketAddr;
+//use axum::{routing::get, Router};
+use axum::{
+    extract::ws::{WebSocketUpgrade, WebSocket},
+    extract::State,
+    routing::get,
+    response::{IntoResponse, Response},
+    Router,
+};
+use redis::{Commands,};
+use std::{net::SocketAddr, sync::{Mutex,Arc}, thread};
 
 mod config;
-mod controllers;
 mod error;
 mod models;
 mod routers;
 mod schemas;
 mod middlewares;
+mod managers;
+mod controllers;
+
+
 use routers::auth;
 use routers::file;
 use config::config::get_env;
-//use config::db::DB;
+use config::app_state::AppState;
+use managers::websocketmanager::GlobalWebSocketManager;
+use crate::controllers::ws::{handler};
+use migration::{Migrator, MigratorTrait, SeaRc};
+use config::redis::{run_subscriber,connect};
 
-use migration::{Migrator, MigratorTrait};
 
-// let router1 = Router::new()
-//     .route("/users", get(|| async { "List of users" }))
-//     .route("/posts", get(|| async { "List of posts" }));
-
-// let router2 = Router::new()
-//     .nest("/api/v1", router1);
-
-// let router3 = Router::new()
-//     .nest("/api", router2)
-//     .route("/", get(|| async { "Hello, world!" }));
-
-// let app = Router::new().merge(router3);
 
 #[tokio::main]
+
 async fn main() {
-    // let connection_result = sea_orm::Database::connect(get_env("DATABASE_URL").to_string()).await;
-    // match connection_result {
-    //     Ok(connection) => {
-    //         println!("connecting to database: {:?}", connection);
-    //     }
-    //     Err(error) => {
-    //         eprintln!("Error connecting to database: {}", error);
-    //         // Handle the error in some way
-    //     }
-    // }
 
     let connection = sea_orm::Database::connect(&get_env("DATABASE_URL"))
         .await
@@ -48,10 +41,22 @@ async fn main() {
     println!("{:?}", connection);
     //Migrator::down(&connection, None).await.unwrap();
 
-    let route = Router::new().nest("/api/v1", 
-    auth::routes().merge(file::routes()),
+   
+    let st=AppState{
+        // sManager: Arc::new(Mutex::new(GlobalWebSocketManager::new()))
+        sManager: Arc::new(Mutex::new(GlobalWebSocketManager::new())),
+        publisher: Arc::new(Mutex::new(connect()))
 
-);
+        
+    };
+    run_subscriber();
+
+    let route = Router::new()
+    .route("/ws/:id", get(handler)).with_state(st)
+    .nest("/api/v1", auth::routes().merge(file::routes()));
+    
+    
+
     let address = SocketAddr::from(([127, 0, 0, 1], 7777));
     axum::Server::bind(&address)
         .serve(route.into_make_service())
