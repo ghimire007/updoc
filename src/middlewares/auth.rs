@@ -1,24 +1,23 @@
+use crate::config::db::DB;
+use crate::config::jwt::validate_token;
+use crate::error::AppError;
+use crate::models::users::{self, Entity as User};
+use crate::schemas::response::SucessResponse;
+use axum::response::IntoResponse;
 use axum::{
-    Router,
-    http::{StatusCode,Request,header},
+    body::Body,
+    http::{header, Request, StatusCode},
     middleware::{self, Next},
     response::Response,
     routing::get,
-    Json, body::Body
+    Json, Router,
 };
 use sea_orm::EntityTrait;
 use std::result::Result;
-use crate::config::jwt::validate_token;
-use crate::error::AppError;
-use crate::schemas::response::{SucessResponse};
-use crate::models::users::{self, Entity as User};
-use crate::config::db::DB;
-use axum::response::IntoResponse;
-
-
 
 pub async fn auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, AppError> {
-    let token = req.headers()
+    let token = req
+        .headers()
         .get(header::AUTHORIZATION)
         .and_then(|header| header.to_str().ok())
         .and_then(|header| {
@@ -28,24 +27,23 @@ pub async fn auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, App
             } else {
                 None
             }
-        });;
+        });
 
     let Some(token) = token else { return Err(AppError::UnAuthorized(
         "Invalid Token".to_owned(),
     ))};
 
-    let token_resp =validate_token(token.to_owned())
-    .map_err(|error| AppError::UnAuthorized("Invalid token".to_owned()))?;
-            
-    let mut user= User::find_by_id(token_resp.claims.id)
-            .one(&*DB)
-            .await
-            .map_err(|error| AppError::InternalServerError)?;
-    
-    let user=user.ok_or_else(|| AppError::UnAuthorized("Invalid token".to_owned()))?;
+    let token_resp = validate_token(token.to_owned())
+        .map_err(|error| AppError::UnAuthorized("Invalid token".to_owned()))?;
+
+    let mut user = User::find_by_id(token_resp.claims.id)
+        .one(&*DB)
+        .await
+        .map_err(|error| AppError::InternalServerError)?;
+
+    let user = user.ok_or_else(|| AppError::UnAuthorized("Invalid token".to_owned()))?;
     req.extensions_mut().insert(user);
     Ok(next.run(req).await)
-
 }
 
 // pub async fn auth<B,D>(
@@ -54,7 +52,7 @@ pub async fn auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, App
 // )->
 // // Result<D, AppError>
 // // where D: IntoResponse
-  
+
 // Result<Response<Body>, AppError>
 // //Result<Json<SucessResponse>, AppError>
 //  {
@@ -67,24 +65,19 @@ pub async fn auth<B>(mut req: Request<B>, next: Next<B>) -> Result<Response, App
 //     ))};
 //     let token_resp =validate_token(token.to_owned())
 //             .map_err(|error| AppError::InternalServerError)?;
-            
+
 //     let mut req_user= User::find_by_id(token_resp.claims.id)
 //             .one(&*DB)
 //             .await
 //             .map_err(|error| AppError::InternalServerError)?;
-            
+
 //     let req_user=req_user.ok_or_else(|| AppError::UnAuthorized("Invalid token".to_owned()))?;
-    
-        
+
 //     request.extensions_mut().insert(req_user);
 //     Ok(
 //         next.run(request).await
 //     )
 
-    
 //     }
 
-
-
-    //user_from_token=validate_token(auth.token());
-
+//user_from_token=validate_token(auth.token());

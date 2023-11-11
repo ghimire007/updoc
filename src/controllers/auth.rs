@@ -2,10 +2,10 @@ use crate::config::config::get_env;
 use crate::config::db::DB;
 use crate::config::jwt::create_token;
 use crate::error::AppError;
-use crate::models::users::{self, Entity as User,Model,ActiveModel};
+use crate::models::users::{self, ActiveModel, Entity as User, Model};
 use crate::schemas::auth::{login::LoginRequest, signup::SignupRequest};
 use crate::schemas::response::{SucessResponse, TokenResponse};
-use axum::{Json, Extension};
+use axum::{Extension, Json};
 use bcrypt::{hash, verify, DEFAULT_COST};
 use sea_orm::{entity::*, query::*, DbBackend};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
@@ -42,8 +42,11 @@ pub async fn signup_user(request: Json<SignupRequest>) -> Result<Json<TokenRespo
 
     //new_user=new_user.save(&*DB).await.unwrap();
 
-    let inserted_user = new_user.insert(&*DB).await.map_err(|error| AppError::InternalServerError)
-    .unwrap();
+    let inserted_user = new_user
+        .insert(&*DB)
+        .await
+        .map_err(|error| AppError::InternalServerError)
+        .unwrap();
 
     //let user =User::insert(new_user).exec(&*DB).await.unwrap();
     //println!("{:?}",new_user);
@@ -81,15 +84,14 @@ pub async fn login_user(request: Json<LoginRequest>) -> Result<Json<TokenRespons
     }))
 }
 
-pub async fn test_user(Extension(user):Extension<Model>,request: Json<LoginRequest>) -> Result<Json<TokenResponse>, AppError> {
-    println!("{:?}",user);
-    println!("{:?}",request.username);
+pub async fn test_user(
+    Extension(user): Extension<Model>,
+    request: Json<LoginRequest>,
+) -> Result<Json<TokenResponse>, AppError> {
+    println!("{:?}", user);
+    println!("{:?}", request.username);
     Ok(Json(TokenResponse {
         message: "success".to_string(),
         token: "jsjgbjvjkdbvdjvbdj".to_string(),
     }))
-
-
-
-
 }

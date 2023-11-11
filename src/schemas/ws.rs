@@ -1,10 +1,9 @@
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize,Serialize,Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Wmsg {
     pub user_id: String,
     pub key: String,
-    pub content:String,
-    pub file_id:String
+    pub content: String,
+    pub file_id: String,
 }
-

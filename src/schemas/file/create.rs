@@ -5,4 +5,3 @@ pub struct CreateFileRequest {
     pub filename: String,
     pub content: Option<String>,
 }
-

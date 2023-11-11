@@ -10,7 +10,7 @@ pub enum AppError {
     BadRequestError(String),
     UnAuthorized(String),
     NotFound(String),
-    Forbidden
+    Forbidden,
 }
 
 impl IntoResponse for AppError {
@@ -24,9 +24,12 @@ impl IntoResponse for AppError {
             ),
             Self::BadRequestError(msg) => (StatusCode::BAD_REQUEST, msg),
             Self::ValidationError(msg) => (StatusCode::BAD_REQUEST, msg),
-            Self::UnAuthorized(msg)=>(StatusCode::UNAUTHORIZED,msg),
-            Self::NotFound(msg)=>(StatusCode::NOT_FOUND,msg),
-            Self::Forbidden=>(StatusCode::NOT_FOUND,"Unauthorized to acess the content".to_owned()),
+            Self::UnAuthorized(msg) => (StatusCode::UNAUTHORIZED, msg),
+            Self::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
+            Self::Forbidden => (
+                StatusCode::NOT_FOUND,
+                "Unauthorized to acess the content".to_owned(),
+            ),
         };
         (status, Json(json!({ "error": err_message }))).into_response()
     }
