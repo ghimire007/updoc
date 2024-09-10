@@ -95,7 +95,6 @@ pub struct List<T> {
 }
 
 impl<T> List<T> {
-
     // Constructs an empty list.
     pub fn new() -> Self {
         Self {
@@ -103,10 +102,6 @@ impl<T> List<T> {
             last: None,
         }
     }
-
-
-
-
 
     // Appends a new node to the list, handling the case where the list is empty.
     pub fn append(&mut self, data: String, id: Id, is_deleted: bool, start: u32, length: u32) {
@@ -118,11 +113,6 @@ impl<T> List<T> {
             self.last = Some(f);
         }
     }
-
-
-
-
-
 
     pub fn insert(
         &mut self,
@@ -176,14 +166,6 @@ impl<T> List<T> {
     }
 }
 
-
-
-
-
-
-
-
-
 // Pretty-printing
 impl<T: Display> Display for List<T> {
     fn fmt(&self, w: &mut std::fmt::Formatter) -> std::result::Result<(), std::fmt::Error> {
@@ -199,15 +181,6 @@ impl<T: Display> Display for List<T> {
         write!(w, "]")
     }
 }
-
-
-
-
-
-
-
-
-
 
 #[test]
 fn main() {
